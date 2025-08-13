@@ -5,13 +5,13 @@ Custom Hailo detection with efficient class filtering and config-driven setup.
 ## Quick Start (Single Command!)
 
 ```bash
-cd ian_experiments
+cd hailo-rpi5-examples/ian_experiments
 ./run.sh
 ```
 
 That's it! The script will:
-- Activate the virtual environment  
-- Run detection with your USB camera
+- Check if virtual environment is active (activate if needed)
+- Run detection with your USB camera  
 - Filter to only show faces, cell phones, and people
 - Display both terminal output AND video overlay
 
@@ -33,23 +33,9 @@ detection:
   confidence: 0.5       # Higher = fewer false positives, better performance
 ```
 
-## Manual Usage
-
-```bash
-# From project root
-source setup_env.sh
-cd ian_experiments
-
-# Run with config
-python detection.py --config config.yaml
-
-# Or with command line args
-python detection.py --input /dev/video8 --labels face "cell phone" --min-confidence 0.5
-```
-
 ## Features
 
+- **One command**: Just `./run.sh` - handles everything
 - **Efficient filtering**: Only shows whitelisted classes in terminal AND video
-- **Config-driven**: Single YAML file controls everything
+- **Config-driven**: Single YAML file controls everything  
 - **USB camera support**: Automatic USB camera detection
-- **One-command run**: Just `./run.sh` and go!
