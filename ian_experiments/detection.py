@@ -2,6 +2,7 @@ import os
 import sys
 from pathlib import Path
 import argparse
+import yaml
 import gi
 gi.require_version('Gst', '1.0')
 from gi.repository import Gst
@@ -116,9 +117,27 @@ def app_callback(pad, info, user_data):
     
     return Gst.PadProbeReturn.OK
 
+def load_config(config_path):
+    """Load configuration from YAML file"""
+    if not os.path.exists(config_path):
+        print(f"❌ Config file not found: {config_path}")
+        return None
+    
+    try:
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+        print(f"✅ Loaded config from {config_path}")
+        return config
+    except Exception as e:
+        print(f"❌ Error loading config: {e}")
+        return None
+
 def build_parser():
     """Build argument parser with practical options"""
     parser = get_default_parser()
+    
+    parser.add_argument("--config", type=str, 
+                       help="Path to YAML config file (overrides other settings)")
     
     parser.add_argument("--labels", nargs="*", 
                        help="Whitelist labels to show (e.g., --labels face 'cell phone' person)")
@@ -160,6 +179,37 @@ if __name__ == "__main__":
         list_common_labels()
         exit(0)
     
+    # Load config file if specified
+    config = None
+    if args.config:
+        config = load_config(args.config)
+        if not config:
+            exit(1)
+    
+    # Determine settings (config overrides CLI args)
+    if config:
+        detection_config = config.get('detection', {})
+        camera_config = detection_config.get('camera', {})
+        
+        # Override args with config values
+        camera_input = camera_config.get('input', 'usb')
+        # Map "usb" alias to actual USB camera device
+        if camera_input == "usb":
+            camera_input = "/dev/video8"  # USB camera detected
+        args.input = camera_input
+        
+        args.width = camera_config.get('width', 640)
+        args.height = camera_config.get('height', 480)
+        args.framerate = camera_config.get('fps', 30)
+        
+        # Detection settings
+        labels = detection_config.get('labels', [])
+        if labels:  # Only override if config has labels
+            args.labels = labels
+        args.min_confidence = detection_config.get('confidence', args.min_confidence)
+        
+        print(f"📋 Using config: input={args.input}, labels={args.labels}, confidence={args.min_confidence}")
+    
     # Setup environment
     project_root = Path(__file__).resolve().parent.parent  # Go up to hailo-rpi5-examples root
     env_file = project_root / ".env"
@@ -173,10 +223,20 @@ if __name__ == "__main__":
     )
     
     print(f"\n🚀 Starting Efficient Detection:")
+    print(f"   • Input: {args.input}")
     print(f"   • Confidence threshold: {args.min_confidence} (higher = more efficient)")
     print(f"   • Label filtering: {'Yes' if args.labels else 'No'}")
+    if args.labels:
+        print(f"   • Showing only: {args.labels}")
     print(f"   • This filters both terminal output AND video overlay efficiently!\n")
+
+    # Update parser defaults to ensure the app uses our config values
+    parser.set_defaults(input=args.input)
+    parser.set_defaults(framerate=args.framerate)
     
+    # Re-parse to ensure updated values are used
+    args = parser.parse_args()
+
     # Use standard detection app - simpler and more reliable
     app = GStreamerDetectionApp(app_callback, user_data, parser)
     app.run()

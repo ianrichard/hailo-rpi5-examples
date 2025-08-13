@@ -1,0 +1,23 @@
+# Detection Configuration
+detection:
+  # Camera settings
+  camera:
+    input: "usb"  # Options: "usb", "/dev/video0", "/dev/video8", etc.
+    width: 640
+    height: 480
+    fps: 30
+  
+  # What to detect (leave empty array [] to detect everything)
+  labels:
+    - "face"
+    - "cell phone"
+    - "person"
+  
+  # Detection thresholds
+  confidence: 0.5
+  
+  # Display settings
+  display:
+    show_fps: true
+    show_labels: true
+    window_title: "Hailo Detection"

@@ -1,48 +1,55 @@
-# Ian's Hailo Detection Experiments
+# Ian's Detection Experiments
 
-Quick custom detection setup with class filtering. Separated from main project to avoid conflicts.
+Custom Hailo detection with efficient class filtering and config-driven setup.
 
-## What We Did
-- **Problem**: Default detection shows everything (laptops, phones, etc.) but we only want specific objects
-- **Solution**: Custom filtering that removes unwanted detections from both terminal output AND video overlay
-- **Environment**: Replaced conda with clean `.venv` setup (saved 3.1GB space)
+## Quick Start (Single Command!)
 
-## Quick Setup
+```bash
+cd ian_experiments
+./run.sh
+```
+
+That's it! The script will:
+- Activate the virtual environment  
+- Run detection with your USB camera
+- Filter to only show faces, cell phones, and people
+- Display both terminal output AND video overlay
+
+## Configuration
+
+Edit `config.yaml` to customize:
+
+```yaml
+detection:
+  camera:
+    input: "usb"        # "usb" for USB camera, or full path like "/dev/video0" 
+    width: 640
+    height: 480
+    fps: 30
+  labels:
+    - "face"
+    - "cell phone" 
+    - "person"
+  confidence: 0.5       # Higher = fewer false positives, better performance
+```
+
+## Manual Usage
 
 ```bash
 # From project root
 source setup_env.sh
-
-# Go to experiments
 cd ian_experiments
 
-# Test it works
-python detection.py --list-common-labels
+# Run with config
+python detection.py --config config.yaml
+
+# Or with command line args
+python detection.py --input /dev/video8 --labels face "cell phone" --min-confidence 0.5
 ```
 
-## Basic Usage
+## Features
 
-```bash
-# Show only people with high confidence
-python detection.py --input /dev/video8 --labels person --min-confidence 0.7
-
-# Multiple objects
-python detection.py --input /dev/video8 --labels person "cell phone" laptop --min-confidence 0.5
-
-# See available object types
-python detection.py --list-common-labels
-```
-
-## Key Points
-- **Filters video overlay** - unwanted objects don't appear in video window
-- **Confidence filtering** - higher values = fewer false positives
-- **Performance metrics** - shows "X% filtered for efficiency" 
-- **Environment**: Uses `.venv` with `hailo-apps` from git (not conda)
-
-## Environment Notes
-If setup breaks, the key dependency is:
-```bash
-pip install git+https://github.com/hailo-ai/hailo-apps-infra.git@dev
-```
-
-Main project `setup_env.sh` was updated to use `.venv` instead of `venv_hailo_rpi_examples`.
+- **Efficient filtering**: Only shows whitelisted classes in terminal AND video
+- **Config-driven**: Single YAML file controls everything
+- **USB camera support**: Automatic USB camera detection
+- **One-command run**: Just `./run.sh` and go!
